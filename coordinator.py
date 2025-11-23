@@ -5,6 +5,7 @@ import aiohttp
 import xml.etree.ElementTree as ET
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -57,9 +58,12 @@ class Frank2Coordinator(DataUpdateCoordinator):
                     end_time = start_time + timedelta(minutes=15)
                     price_kwh = price / 1000
                     allin = (price_kwh + self.inkoop) * (1 + self.btw / 100) + self.eb
+                    local_tz = dt_util.get_default_time_zone()
+                    start_dt_local = dt_util.as_local(start_time)
+                    end_dt_local = dt_util.as_local(end_time)
                     points.append({
-                        "start": start_time.isoformat(),
-                        "end": end_time.isoformat(),
+                        "start": start_dt_local.isoformat(),
+                        "end": end_dt_local.isoformat(),
                         "price": round(allin, 5),
                         "net_price": round(price_kwh, 5)
                     })

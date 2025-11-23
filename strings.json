@@ -6,7 +6,27 @@
                     "token": "API Token",
                     "domain": "Domain",
                     "inkoop": "Inkoop (EUR/kWh)",
-                    "eb": "EB (EUR/kWh)"
+                    "eb": "EB (EUR/kWh)",
+                    "btw": "BTW (%)",
+                    "lowest_periods_count": "Aantal laagste periodes",
+                    "highest_periods_count": "Aantal hoogste periodes"
+                }
+            }
+        }
+    },
+    "nl": {
+        "config": {
+            "step": {
+                "user": {
+                    "data": {
+                        "token": "API Token",
+                        "domain": "Domain",
+                        "inkoop": "Inkoop (EUR/kWh)",
+                        "eb": "EB (EUR/kWh)",
+                        "btw": "BTW (%)",
+                        "lowest_periods_count": "Aantal laagste periodes",
+                        "highest_periods_count": "Aantal hoogste periodes"
+                    }
                 }
             }
         }
