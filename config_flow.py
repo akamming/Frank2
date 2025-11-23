@@ -16,8 +16,10 @@ class Frank2ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema({
                 vol.Required("token"): str,
-                vol.Required("domain"): str,
                 vol.Required("inkoop", default=0.01815): vol.Coerce(float),
                 vol.Required("eb", default=0.12286): vol.Coerce(float),
+                vol.Required("btw", default=21.0): vol.Coerce(float),
+                vol.Required("lowest_periods_count", default=14): vol.All(vol.Coerce(int), vol.Range(min=4, max=24)),
+                vol.Required("highest_periods_count", default=8): vol.All(vol.Coerce(int), vol.Range(min=4, max=24)),
             })
         )

@@ -8,9 +8,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = Frank2Coordinator(
         hass,
         entry.data["token"],
-        entry.data["domain"],
+        "10YNL----------L",  # Hardcoded for Netherlands
         entry.data["inkoop"],
-        entry.data["eb"]
+        entry.data["eb"],
+        entry.data["btw"]
     )
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator

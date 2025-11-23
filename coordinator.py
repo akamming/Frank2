@@ -11,31 +11,37 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 class Frank2Coordinator(DataUpdateCoordinator):
-    def __init__(self, hass, token, domain, inkoop, eb):
+    def __init__(self, hass, token, domain, inkoop, eb, btw):
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=timedelta(hours=1))
         self.token = token
         self.domain = domain
         self.inkoop = inkoop
         self.eb = eb
+        self.btw = btw
 
     async def _async_update_data(self):
         today = datetime.utcnow().date()
         tomorrow = today + timedelta(days=1)
         data = {}
-        ns = {'ns': 'urn:iec62325.351:tc57wg16:451-3:publicationdocument:7:0'}
+        ns = {'ns': 'urn:iec62325.351:tc57wg16:451-3:publicationdocument:7:3'}
         for date in [today, tomorrow]:
             date_str = date.strftime("%Y%m%d")
-            url = f"https://web-api.tp.entsoe.eu/api?securityToken={self.token}&documentType=A44&in_Domain={self.domain}&out_Domain={self.domain}&periodStart={date_str}0000&periodEnd={date_str}2300"
+            next_date_str = (date + timedelta(days=1)).strftime("%Y%m%d")
+            url = f"https://web-api.tp.entsoe.eu/api?securityToken={self.token}&documentType=A44&in_Domain={self.domain}&out_Domain={self.domain}&periodStart={date_str}0000&periodEnd={next_date_str}0000"
             try:
+                _LOGGER.debug(f"Fetching data for {date_str} from {url}")
                 async with aiohttp.ClientSession() as session:
                     async with session.get(url) as resp:
+                        _LOGGER.debug(f"Response status for {date_str}: {resp.status}")
                         if resp.status != 200:
                             _LOGGER.warning(f"Failed to fetch data for {date_str}: {resp.status}")
                             continue
                         xml = await resp.text()
+                _LOGGER.debug(f"XML received for {date_str}: {xml[:500]}...")  # Log first 500 chars
                 root = ET.fromstring(xml)
                 time_interval = root.find(".//ns:timeInterval", ns)
                 if time_interval is None:
+                    _LOGGER.warning(f"No timeInterval found in XML for {date_str}")
                     continue
                 start = time_interval.find("ns:start", ns).text
                 start_dt = datetime.fromisoformat(start.replace('Z', '+00:00'))
@@ -50,13 +56,16 @@ class Frank2Coordinator(DataUpdateCoordinator):
                     start_time = start_dt + timedelta(minutes=minutes)
                     end_time = start_time + timedelta(minutes=15)
                     price_kwh = price / 1000
-                    allin = price_kwh + self.inkoop + self.eb
+                    allin = (price_kwh + self.inkoop) * (1 + self.btw / 100) + self.eb
                     points.append({
                         "start": start_time.isoformat(),
                         "end": end_time.isoformat(),
-                        "price": round(allin, 5)
+                        "price": round(allin, 5),
+                        "net_price": round(price_kwh, 5)
                     })
+                _LOGGER.debug(f"Found {len(points)} points for {date_str}")
                 data[date_str] = points
             except Exception as e:
                 _LOGGER.error(f"Error fetching data for {date_str}: {e}")
+        _LOGGER.debug(f"Final data: {data}")
         return data
