@@ -24,7 +24,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
         Frank2HighestPeriodsTodaySensor(coordinator, entry),
         Frank2LowestPeriodsTodaySensor(coordinator, entry),
         Frank2InHighestPeriod(coordinator, entry),
-        Frank2InLowestPeriod(coordinator, entry)
+        Frank2InLowestPeriod(coordinator, entry),
+        Frank2InLowestPeriodsFuture(coordinator, entry)
     ])
 
 class Frank2AllInSensor(CoordinatorEntity, SensorEntity):
@@ -547,6 +548,43 @@ class Frank2InLowestPeriod(BinarySensorEntity, CoordinatorEntity):
         count = self._entry.data.get("lowest_periods_count", 14)
         selected = sorted_points[:count]
         current_time = datetime.now(timezone.utc)
+        for point in selected:
+            start = datetime.fromisoformat(point["start"])
+            end = datetime.fromisoformat(point["end"])
+            if start <= current_time < end:
+                return True
+        return False
+
+class Frank2InLowestPeriodsFuture(BinarySensorEntity, CoordinatorEntity):
+    def __init__(self, coordinator, entry):
+        super().__init__(coordinator)
+        self._entry = entry
+
+    @property
+    def name(self):
+        return "Frank2 In Lowest Periods Future"
+
+    @property
+    def unique_id(self):
+        return f"{self._entry.entry_id}_in_lowest_periods_future"
+
+    @property
+    def is_on(self):
+        data = self.coordinator.data
+        if not data:
+            return False
+        current_time = datetime.now(timezone.utc)
+        future_points = []
+        for date, points in data.items():
+            for point in points:
+                start = datetime.fromisoformat(point["start"])
+                if start > current_time:
+                    future_points.append(point)
+        if not future_points:
+            return False
+        sorted_points = sorted(future_points, key=lambda p: p["price"])
+        count = self._entry.data.get("lowest_periods_count", 14)
+        selected = sorted_points[:count]
         for point in selected:
             start = datetime.fromisoformat(point["start"])
             end = datetime.fromisoformat(point["end"])
