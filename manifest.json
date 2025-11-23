@@ -1,0 +1,9 @@
+{
+    "domain": "frank2",
+    "name": "Frank2 Electricity Prices",
+    "config_flow": true,
+    "documentation": "",
+    "iot_class": "cloud_polling",
+    "requirements": [],
+    "version": "1.0.0"
+}
