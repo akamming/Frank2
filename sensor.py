@@ -575,11 +575,17 @@ class Frank2InLowestPeriodsFuture(BinarySensorEntity, CoordinatorEntity):
             return False
         current_time = datetime.now(timezone.utc)
         future_points = []
+        current_period = None
         for date, points in data.items():
             for point in points:
                 start = datetime.fromisoformat(point["start"])
-                if start > current_time:
+                end = datetime.fromisoformat(point["end"])
+                if start <= current_time < end:
+                    current_period = point
+                elif start > current_time:
                     future_points.append(point)
+        if current_period:
+            future_points.append(current_period)
         if not future_points:
             return False
         sorted_points = sorted(future_points, key=lambda p: p["price"])
