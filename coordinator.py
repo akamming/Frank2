@@ -40,14 +40,18 @@ class Frank2Coordinator(DataUpdateCoordinator):
                         xml = await resp.text()
                 _LOGGER.debug(f"XML received for {date_str}: {xml[:500]}...")  # Log first 500 chars
                 root = ET.fromstring(xml)
-                time_interval = root.find(".//ns:timeInterval", ns)
+                time_series = root.find(".//ns:TimeSeries", ns)
+                if time_series is None:
+                    _LOGGER.debug(f"No TimeSeries found in XML for {date_str}")
+                    continue
+                time_interval = time_series.find(".//ns:timeInterval", ns)
                 if time_interval is None:
                     _LOGGER.debug(f"No timeInterval found in XML for {date_str}")
                     continue
                 start = time_interval.find("ns:start", ns).text
                 start_dt = datetime.fromisoformat(start.replace('Z', '+00:00'))
                 points = []
-                for point in root.findall(".//ns:Point", ns):
+                for point in time_series.findall(".//ns:Point", ns):
                     position = int(point.find("ns:position", ns).text)
                     price_elem = point.find("ns:price.amount", ns)
                     if price_elem is None:
