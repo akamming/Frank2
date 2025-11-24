@@ -42,7 +42,7 @@ class Frank2Coordinator(DataUpdateCoordinator):
                 root = ET.fromstring(xml)
                 time_interval = root.find(".//ns:timeInterval", ns)
                 if time_interval is None:
-                    _LOGGER.warning(f"No timeInterval found in XML for {date_str}")
+                    _LOGGER.debug(f"No timeInterval found in XML for {date_str}")
                     continue
                 start = time_interval.find("ns:start", ns).text
                 start_dt = datetime.fromisoformat(start.replace('Z', '+00:00'))
