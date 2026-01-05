@@ -40,10 +40,12 @@ class Frank2Coordinator(DataUpdateCoordinator):
                         xml = await resp.text()
                 _LOGGER.debug(f"XML received for {date_str}: {xml[:500]}...")  # Log first 500 chars
                 root = ET.fromstring(xml)
-                time_series = root.find(".//ns:TimeSeries", ns)
-                if time_series is None:
+                time_series_list = root.findall(".//ns:TimeSeries", ns)
+                _LOGGER.debug(f"Found {len(time_series_list)} TimeSeries for {date_str}")
+                if not time_series_list:
                     _LOGGER.debug(f"No TimeSeries found in XML for {date_str}")
                     continue
+                time_series = time_series_list[0]
                 time_interval = time_series.find(".//ns:timeInterval", ns)
                 if time_interval is None:
                     _LOGGER.debug(f"No timeInterval found in XML for {date_str}")
@@ -61,7 +63,7 @@ class Frank2Coordinator(DataUpdateCoordinator):
                     start_time = start_dt + timedelta(minutes=minutes)
                     end_time = start_time + timedelta(minutes=15)
                     price_kwh = price / 1000
-                    allin = (price_kwh + self.inkoop) * (1 + self.btw / 100) + self.eb
+                    allin = (price_kwh) * (1 + self.btw / 100) + self.inkoop + self.eb
                     local_tz = dt_util.get_default_time_zone()
                     start_dt_local = dt_util.as_local(start_time)
                     end_dt_local = dt_util.as_local(end_time)
